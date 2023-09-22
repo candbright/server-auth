@@ -1,35 +1,36 @@
 package dao
 
 import (
-	"github.com/candbright/go-core/errors"
-	"piano-server/server/db"
-	"piano-server/server/domain"
+	"github.com/candbright/server-auth/internal/server/db"
+	"github.com/candbright/server-auth/internal/server/db/options"
+	"github.com/candbright/server-auth/internal/server/domain"
 )
 
 type UserDao struct {
+	DB db.DB
 }
 
-func NewUserDao() *UserDao {
-	return &UserDao{}
+func NewUserDao(db db.DB) *UserDao {
+	return &UserDao{db}
 }
 func (dao *UserDao) ListUsers() ([]domain.User, error) {
-	ins, err := db.GetDB()
-	if err != nil {
-		return nil, err
-	}
-	get, err := ins.ListUsers()
+	get, err := dao.DB.ListUsers()
 	if err != nil {
 		return nil, err
 	}
 	return get, nil
 }
 
-func (dao *UserDao) GetUser(id string) (domain.User, error) {
-	ins, err := db.GetDB()
+func (dao *UserDao) GetUserById(id string) (domain.User, error) {
+	get, err := dao.DB.GetUser(options.WhereId(id))
 	if err != nil {
 		return domain.User{}, err
 	}
-	get, err := ins.GetUser(id)
+	return get, nil
+}
+
+func (dao *UserDao) GetUser(opts ...options.Option) (domain.User, error) {
+	get, err := dao.DB.GetUser(opts...)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -37,15 +38,11 @@ func (dao *UserDao) GetUser(id string) (domain.User, error) {
 }
 
 func (dao *UserDao) AddUser(data domain.User) (domain.User, error) {
-	ins, err := db.GetDB()
+	err := dao.DB.AddUser(data)
 	if err != nil {
 		return domain.User{}, err
 	}
-	err = ins.AddUser(data)
-	if err != nil {
-		return domain.User{}, err
-	}
-	after, err := ins.GetUser(data.Id)
+	after, err := dao.GetUserById(data.Id)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -53,15 +50,11 @@ func (dao *UserDao) AddUser(data domain.User) (domain.User, error) {
 }
 
 func (dao *UserDao) UpdateUser(id string, data domain.User) (domain.User, error) {
-	ins, err := db.GetDB()
+	err := dao.DB.UpdateUser(id, data)
 	if err != nil {
 		return domain.User{}, err
 	}
-	err = ins.UpdateUser(id, data)
-	if err != nil {
-		return domain.User{}, err
-	}
-	after, err := ins.GetUser(id)
+	after, err := dao.GetUserById(id)
 	if err != nil {
 		return domain.User{}, err
 	}
@@ -69,11 +62,7 @@ func (dao *UserDao) UpdateUser(id string, data domain.User) (domain.User, error)
 }
 
 func (dao *UserDao) DeleteUser(id string) error {
-	ins, err := db.GetDB()
-	if err != nil {
-		return err
-	}
-	err = ins.DeleteUser(id)
+	err := dao.DB.DeleteUser(id)
 	if err != nil {
 		return err
 	}
@@ -81,16 +70,11 @@ func (dao *UserDao) DeleteUser(id string) error {
 }
 
 func (dao *UserDao) GetUserByPhoneNumber(phoneNumber string) (domain.User, error) {
-	list, err := dao.ListUsers()
+	user, err := dao.DB.GetUser(options.Where("phone_number", phoneNumber))
 	if err != nil {
 		return domain.User{}, err
 	}
-	for _, user := range list {
-		if user.PhoneNumber == phoneNumber {
-			return user, nil
-		}
-	}
-	return domain.User{}, errors.NotExistError{Id: phoneNumber, Type: "phone number"}
+	return user, nil
 }
 
 func (dao *UserDao) DeleteUserByPhoneNumber(phoneNumber string) error {

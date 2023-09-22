@@ -5,7 +5,7 @@ db:
   retry: 3
   mysql:
     ip:
-      default: localhost
+      default: 127.0.0.1
       env: ${PS_MYSQL_IP}
     port:
       default: 3306
@@ -16,23 +16,23 @@ db:
     password:
       default: 1q2w3e@4R
       env: ${PS_MYSQL_PASSWORD}
-    db: piano
+    db: auth
     params: ?charset-utf8&parseTime=True&loc=Local
     log:
       windows: D:\log\server-auth\db.log
       linux: /var/log/server-auth/db.log
   redis:
     ip:
-      default: localhost
+      default: 127.0.0.1
       env: ${PS_REDIS_IP}
     port:
-      default: 3306
+      default: 6379
       env: ${PS_REDIS_PORT}
     password:
       default: 1q2w3e@4R
       env: ${PS_REDIS_PASSWORD}
     db: 0
-    pool-size: 20
+    pool-size: 6
 log:
   path:
     windows: D:\log\server-auth\server.log

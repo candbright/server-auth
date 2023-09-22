@@ -2,7 +2,7 @@ package db
 
 import (
 	"github.com/candbright/go-log/log"
-	"piano-server/config"
+	"github.com/candbright/server-auth/internal/config"
 )
 
 var instance DB

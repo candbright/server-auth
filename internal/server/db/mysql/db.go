@@ -2,14 +2,15 @@ package mysql
 
 import (
 	"fmt"
+	"github.com/candbright/server-auth/internal/config"
+	"github.com/candbright/server-auth/internal/server/db/options"
+	"github.com/candbright/server-auth/internal/server/domain"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"io"
 	"log"
 	"os"
-	"piano-server/config"
-	"piano-server/server/domain"
 )
 
 type DB struct {
@@ -70,4 +71,13 @@ func NewDB() (*DB, error) {
 		return nil, err
 	}
 	return instance, nil
+}
+
+func (DB *DB) Options(opts ...options.Option) *gorm.DB {
+	parseOptions := options.ParseOptions(opts...)
+	var query *gorm.DB
+	for key, value := range parseOptions.Where {
+		query = DB.Where(key+" = ?", value)
+	}
+	return query
 }

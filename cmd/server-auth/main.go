@@ -4,10 +4,10 @@ import (
 	"github.com/candbright/go-core/rest/handler"
 	"github.com/candbright/go-log/log"
 	"github.com/candbright/go-log/options"
+	"github.com/candbright/server-auth/internal/api"
+	"github.com/candbright/server-auth/internal/config"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"piano-server/config"
-	"piano-server/server/service"
 	"strconv"
 )
 
@@ -28,7 +28,7 @@ func main() {
 		panic(err)
 	}
 	engine := gin.New()
-	service.RegisterHandlers(engine)
+	api.RegisterHandlers(engine)
 	log.Debug("start application " + config.Get("application.name"))
 	_ = engine.Run(":" + strconv.Itoa(config.GetInt("application.port")))
 }

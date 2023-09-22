@@ -1,4 +1,4 @@
-module piano-server
+module github.com/candbright/server-auth
 
 go 1.20
 
@@ -9,6 +9,7 @@ require (
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/google/uuid v1.3.0
+	github.com/google/wire v0.5.0
 	github.com/sirupsen/logrus v1.9.0
 	gorm.io/datatypes v1.2.0
 	gorm.io/driver/mysql v1.5.1

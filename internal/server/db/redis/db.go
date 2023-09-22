@@ -2,8 +2,8 @@ package redis
 
 import (
 	"fmt"
+	"github.com/candbright/server-auth/internal/config"
 	"github.com/go-redis/redis/v8"
-	"piano-server/config"
 	"time"
 )
 
@@ -17,8 +17,8 @@ func NewDB() (*DB, error) {
 		ip       = config.Get("db.redis.ip")
 		port     = config.GetInt("db.redis.port")
 		password = config.Get("db.redis.password")
-		dbName   = config.GetInt("db.mysql.db")
-		poolSize = config.GetInt("db.mysql.pool-size")
+		dbName   = config.GetInt("db.redis.db")
+		poolSize = config.GetInt("db.redis.pool-size")
 	)
 	client := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", ip, port),

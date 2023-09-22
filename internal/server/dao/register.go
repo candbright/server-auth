@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"piano-server/server/db"
+	"github.com/candbright/server-auth/internal/server/db"
 )
 
 type RegisterDao struct {

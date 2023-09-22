@@ -1,20 +1,19 @@
-package service
+package api
 
 import (
 	"errors"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/candbright/go-core/rest"
-	"github.com/candbright/go-core/rest/handler"
+	"github.com/candbright/server-auth/internal/config"
+	"github.com/candbright/server-auth/internal/server/domain"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"piano-server/config"
-	"piano-server/server/domain"
 	"time"
 )
 
 var identityKey = "phone_number"
 
-var AdminUser = &domain.User{
+var adminUser = &domain.User{
 	Name:        "admin",
 	Password:    "admin@123456",
 	PhoneNumber: "15888888888",
@@ -38,10 +37,10 @@ func RegisterAuthMiddleware(eng *gin.Engine) *gin.RouterGroup {
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			phoneNumber := claims[identityKey].(string)
-			if phoneNumber == AdminUser.PhoneNumber {
-				return AdminUser
+			if phoneNumber == adminUser.PhoneNumber {
+				return adminUser
 			}
-			user, _ := userDao.GetUserByPhoneNumber(phoneNumber)
+			user, _ := RegisterService.UserDao.GetUserByPhoneNumber(phoneNumber)
 			return &user
 		},
 		Authenticator: func(c *gin.Context) (interface{}, error) {
@@ -54,9 +53,9 @@ func RegisterAuthMiddleware(eng *gin.Engine) *gin.RouterGroup {
 			phoneNumber := loginVal.PhoneNumber
 
 			if username == "admin" && password == "admin@123456" {
-				return AdminUser, nil
+				return adminUser, nil
 			}
-			user, err := userDao.GetUserByPhoneNumber(phoneNumber)
+			user, err := RegisterService.UserDao.GetUserByPhoneNumber(phoneNumber)
 			if err != nil {
 				return nil, errors.New("incorrect phone number")
 			}
@@ -100,14 +99,4 @@ func RegisterAuthMiddleware(eng *gin.Engine) *gin.RouterGroup {
 	authGroup := eng.Group("")
 	authGroup.Use(authMiddleware.MiddlewareFunc())
 	return authGroup
-}
-
-func RegisterHandlers(engine *gin.Engine) {
-	engine.Use(handler.LogHandler())
-	engine.GET("/register", GetRegisterCode)
-	engine.POST("/register", RegisterUser)
-	authGroup := RegisterAuthMiddleware(engine)
-	authGroup.GET("/users/info", GetUserInfo)
-	authGroup.PUT("/users/info", UpdateUserInfo)
-	authGroup.DELETE("/users/info", DeleteUserInfo)
 }

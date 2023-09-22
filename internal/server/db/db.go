@@ -1,9 +1,10 @@
 package db
 
 import (
-	"piano-server/server/db/mysql"
-	"piano-server/server/db/redis"
-	"piano-server/server/domain"
+	"github.com/candbright/server-auth/internal/server/db/mysql"
+	"github.com/candbright/server-auth/internal/server/db/options"
+	"github.com/candbright/server-auth/internal/server/db/redis"
+	"github.com/candbright/server-auth/internal/server/domain"
 )
 
 type Register interface {
@@ -13,7 +14,7 @@ type Register interface {
 
 type User interface {
 	ListUsers() ([]domain.User, error)
-	GetUser(id string) (domain.User, error)
+	GetUser(filter ...options.Option) (domain.User, error)
 	AddUser(data domain.User) error
 	UpdateUser(id string, user domain.User) error
 	DeleteUser(id string) error

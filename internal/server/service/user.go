@@ -3,22 +3,39 @@ package service
 import (
 	"errors"
 	"github.com/candbright/go-core/rest"
+	"github.com/candbright/server-auth/internal/server/dao"
+	"github.com/candbright/server-auth/internal/server/domain"
+	"github.com/candbright/server-auth/internal/server/uuid"
 	"github.com/gin-gonic/gin"
-	"piano-server/server/domain"
-	"piano-server/server/internal"
 )
 
-func AllocateCode() string {
-	code := internal.RandomRegisterCode()
+type RegisterService struct {
+	RegisterDao *dao.RegisterDao
+	UserDao     *dao.UserDao
+}
+
+func NewRegisterService(registerDao *dao.RegisterDao, userDao *dao.UserDao) *RegisterService {
+	return &RegisterService{
+		registerDao,
+		userDao,
+	}
+}
+
+func (s *RegisterService) AllocateCode() string {
+	code := uuid.RandomRegisterCode()
 	//TODO send the message
 	return code
 }
 
-func GetRegisterCode(context *gin.Context) {
+func (s *RegisterService) GetRegisterCode(context *gin.Context) {
 	rest.GET(context, func() (interface{}, error) {
 		phoneNumber := context.Query("phone_number")
-		code := AllocateCode()
-		err := registerDao.SetRegisterCode(phoneNumber, code)
+		codeCached, _ := s.RegisterDao.GetRegisterCode(phoneNumber)
+		if codeCached != "" {
+			return codeCached, nil
+		}
+		code := s.AllocateCode()
+		err := s.RegisterDao.SetRegisterCode(phoneNumber, code)
 		if err != nil {
 			return nil, err
 		}
@@ -26,11 +43,11 @@ func GetRegisterCode(context *gin.Context) {
 	})
 }
 
-func RegisterUser(context *gin.Context) {
+func (s *RegisterService) RegisterUser(context *gin.Context) {
 	rest.POST[domain.User](context, func(receive domain.User) (interface{}, error) {
 		phoneNumber := context.Query("phone_number")
 		code := context.Query("code")
-		codeSaved, err := registerDao.GetRegisterCode(phoneNumber)
+		codeSaved, err := s.RegisterDao.GetRegisterCode(phoneNumber)
 		if err != nil {
 			return nil, err
 		}
@@ -38,7 +55,7 @@ func RegisterUser(context *gin.Context) {
 			return nil, errors.New("invalid code")
 		}
 		if receive.Id == "" {
-			receive.Id = internal.UUID()
+			receive.Id = uuid.UUID()
 		}
 		if receive.PhoneNumber == "" {
 			return nil, errors.New("please set the phone number")
@@ -49,7 +66,7 @@ func RegisterUser(context *gin.Context) {
 		if receive.Password == "" {
 			receive.Password = "1q2w3e4R!"
 		}
-		add, err := userDao.AddUser(receive)
+		add, err := s.UserDao.AddUser(receive)
 		if err != nil {
 			return nil, err
 		}
@@ -57,17 +74,17 @@ func RegisterUser(context *gin.Context) {
 	})
 }
 
-func GetUserInfo(context *gin.Context) {
+func (s *RegisterService) GetUserInfo(context *gin.Context) {
 	rest.GET(context, func() (interface{}, error) {
 		var err error
 		var user domain.User
 		id := context.Query("id")
 		if id != "" {
-			user, err = userDao.GetUser(id)
+			user, err = s.UserDao.GetUserById(id)
 		}
 		phoneNumber := context.Query("phone_number")
 		if phoneNumber != "" {
-			user, err = userDao.GetUserByPhoneNumber(phoneNumber)
+			user, err = s.UserDao.GetUserByPhoneNumber(phoneNumber)
 		}
 		if err != nil {
 			return nil, err
@@ -76,25 +93,25 @@ func GetUserInfo(context *gin.Context) {
 	})
 }
 
-func UpdateUserInfo(context *gin.Context) {
+func (s *RegisterService) UpdateUserInfo(context *gin.Context) {
 	rest.PUT[domain.User](context, func(receive domain.User) (interface{}, error) {
 		var err error
 		var before domain.User
 		var after domain.User
 		id := context.Query("id")
 		if id != "" {
-			after, err = userDao.UpdateUser(id, receive)
+			after, err = s.UserDao.UpdateUser(id, receive)
 			if err != nil {
 				return nil, err
 			}
 		}
 		phoneNumber := context.Query("phone_number")
 		if phoneNumber != "" {
-			before, err = userDao.GetUserByPhoneNumber(phoneNumber)
+			before, err = s.UserDao.GetUserByPhoneNumber(phoneNumber)
 			if err != nil {
 				return nil, err
 			}
-			after, err = userDao.UpdateUser(before.Id, receive)
+			after, err = s.UserDao.UpdateUser(before.Id, receive)
 			if err != nil {
 				return nil, err
 			}
@@ -103,18 +120,18 @@ func UpdateUserInfo(context *gin.Context) {
 	})
 }
 
-func DeleteUserInfo(context *gin.Context) {
+func (s *RegisterService) DeleteUserInfo(context *gin.Context) {
 	rest.DELETE(context, func() (interface{}, error) {
 		id := context.Query("id")
 		if id != "" {
-			err := userDao.DeleteUser(id)
+			err := s.UserDao.DeleteUser(id)
 			if err != nil {
 				return nil, err
 			}
 		}
 		phoneNumber := context.Query("phone_number")
 		if phoneNumber != "" {
-			err := userDao.DeleteUserByPhoneNumber(phoneNumber)
+			err := s.UserDao.DeleteUserByPhoneNumber(phoneNumber)
 			if err != nil {
 				return nil, err
 			}
@@ -123,6 +140,6 @@ func DeleteUserInfo(context *gin.Context) {
 	})
 }
 
-func UserLogin(context *gin.Context) {
+func (s *RegisterService) UserLogin(context *gin.Context) {
 
 }
